@@ -7,37 +7,75 @@
 #include <vector>
 #include <string>
 
-use namespace std;
+using namespace std;
 
 namespace Snail {
 
     class Svg {
     public:
-    Svg();
-    ~Svg();
+    Svg() {
+        
+    }
 
-    int init(int width, int height);
-    void disable();
+    ~Svg() {
+        
+    }
+
+    int init(int width, int height)
+    {
+        if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+            std::cerr << "SDL_Init Error: " << SDL_GetError() << std::endl;
+            return 1;
+        }
+
+        window = SDL_CreateWindow("Hello World!", 100, 100, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS);
+        if (window == nullptr) {
+            std::cerr << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
+            SDL_Quit();
+            return 1;
+        }
+
+        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+        if (renderer == nullptr) {
+            SDL_DestroyWindow(window);
+            std::cerr << "SDL_CreateRenderer Error: " << SDL_GetError() << std::endl;
+            SDL_Quit();
+            return 1;
+        }
+
+        return 0;
+    }
+
+    void disable()
+    {
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+    }
+
     void load(const string& path)
     {
-        SSvg* svg = SSvg::load(path);
+        SSvg* svg = SSvg::LoadPath(path);
         if(svg == nullptr)
         {
             return;
         }
         set_root(svg);
     }
+
     void set_root(SSvg* root)
     {
         this->root = root;
     }
+    
     void run()
     {
-        SDL_PollEvent(this->event);
+        SDL_Event event;
+        SDL_PollEvent(&event);
         bool quit = false;
         while (!quit) {
-            while (SDL_PollEvent(this->event)) {
-                if (this->event->type == SDL_QUIT) {
+            while (SDL_PollEvent(&event)) {
+                if (event.type == SDL_QUIT) {
                     quit = true;
                 }
             }
@@ -49,7 +87,6 @@ namespace Snail {
     private:
     SDL_Window* window;
     SDL_Renderer* renderer;
-    SDL_Event* event;
     //TTF_Font* font;
     SSvg* root;
     };
